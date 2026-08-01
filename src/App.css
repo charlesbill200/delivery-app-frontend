@@ -1,0 +1,544 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: system-ui, sans-serif;
+  text-align: left;
+}
+
+h1 {
+  margin: 0 0 4px 0;
+  font-size: 1.3em;
+}
+
+/* --- Tabs (from App.jsx) --- */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #444;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  cursor: pointer;
+  color: #aaa;
+  font-size: 1em;
+  border-bottom: 2px solid transparent;
+}
+
+.tab.active {
+  color: white;
+  border-bottom: 2px solid #4a90d9;
+}
+
+/* --- Inbox header --- */
+.inbox-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.inbox-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 0.85em;
+  color: #aaa;
+}
+
+.stat-new {
+  color: #e8622c;
+}
+
+/* --- Kanban board --- */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.kanban-column {
+  background: #161616;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px;
+  min-height: 200px;
+}
+
+.kanban-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85em;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  color: #ccc;
+}
+
+.column-count {
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 0.9em;
+}
+
+.empty-column {
+  text-align: center;
+  color: #666;
+  padding: 24px 0;
+  font-size: 0.85em;
+  border-top: 1px dashed #333;
+}
+
+/* --- Cards --- */
+.kanban-card {
+  background: #f4ecd8;
+  color: #222;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.kanban-card-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8em;
+  color: #777;
+  margin-bottom: 6px;
+}
+
+.order-number {
+  font-weight: bold;
+  color: #222;
+}
+
+.kanban-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tag {
+  font-size: 0.7em;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.tag-delivery {
+  background: #f3d9c9;
+  color: #a5502b;
+}
+
+.tag-pickup {
+  background: #d9e8d9;
+  color: #2e6b2e;
+}
+
+.customer-name {
+  font-size: 0.85em;
+  color: #555;
+}
+
+.kanban-items {
+  font-size: 0.85em;
+  border-top: 1px dashed #ccc;
+  border-bottom: 1px dashed #ccc;
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+.kanban-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total {
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.done-label {
+  color: #2e8b57;
+  font-weight: bold;
+  font-size: 0.85em;
+}
+
+button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #d9542a;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #bf4620;
+}
+
+/* Ready column buttons show green instead */
+.kanban-column:nth-child(3) button {
+  background: #2e8b57;
+}
+
+.kanban-column:nth-child(3) button:hover {
+  background: #256e46;
+}
+
+/* --- Menu management (unchanged from before) --- */
+.menu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #1a1a1a;
+  max-width: 400px;
+}
+
+.menu-form input {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #222;
+  color: white;
+  font-size: 0.95em;
+}
+
+.menu-item-card {
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: #1a1a1a;
+  max-width: 400px;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  background: #333;
+}
+
+.status-placed {
+  background: #7a5c00;
+}
+.status-ready {
+  background: #1e8a4a;
+}
+
+.error-text {
+  color: #ff6b6b;
+}
+
+/* --- Menu Management (new design) --- */
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.menu-stats {
+  display: flex;
+  gap: 20px;
+  font-size: 0.85em;
+  color: #aaa;
+}
+
+.menu-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+}
+
+.menu-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-label {
+  font-size: 0.75em;
+  color: #888;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.category-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1a1a1a;
+  color: #ccc;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  text-align: left;
+}
+
+.category-btn.active {
+  background: #d9542a;
+  color: white;
+  border-color: #d9542a;
+}
+
+.category-count {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 0.85em;
+}
+
+.add-category-btn {
+  background: none;
+  border: 1px dashed #555;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #aaa;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.menu-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.add-item-btn {
+  background: #d9542a;
+  border-radius: 20px;
+  padding: 8px 18px;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.menu-row-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: #3a2a1a;
+  flex-shrink: 0;
+}
+
+.menu-row-info {
+  flex: 1;
+}
+
+.menu-row-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-row-desc {
+  color: #999;
+  font-size: 0.85em;
+  margin: 2px 0 0 0;
+}
+
+.menu-row-price {
+  font-family: monospace;
+  color: #e8a13a;
+  font-weight: bold;
+  min-width: 70px;
+  text-align: right;
+}
+
+.tag {
+  font-size: 0.65em;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.tag-vegetarian {
+  background: #d9e8d9;
+  color: #2e6b2e;
+}
+.tag-spicy {
+  background: #f3d0d0;
+  color: #a52b2b;
+}
+
+.icon-btn {
+  background: #2a2a2a;
+  border: none;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  color: #ccc;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* --- Toggle switch --- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #444;
+  border-radius: 22px;
+  transition: 0.2s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.switch input:checked + .slider {
+  background-color: #2e8b57;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(18px);
+}
+
+/* --- Modal --- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-actions button[type="button"] {
+  background: #444;
+}
+
+/* --- Login screen --- */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, sans-serif;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+  padding: 24px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+}
+
+.login-form h1 {
+  font-size: 1.2em;
+  margin-bottom: 8px;
+}
+
+.login-form input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #222;
+  color: white;
+  font-size: 0.95em;
+}
+
+.toggle-text {
+  font-size: 0.85em;
+  color: #999;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.toggle-text a {
+  color: #4a90d9;
+  cursor: pointer;
+}
+
+/* --- Top bar (shown once logged in) --- */
+.app-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.logout-btn {
+  background: #444;
+  font-weight: normal;
+  padding: 6px 14px;
+}
