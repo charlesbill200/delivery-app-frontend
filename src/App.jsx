@@ -1,148 +1,64 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import "./App.css";
+import OrderInbox from "./OrderInbox";
+import MenuManagement from "./MenuManagement";
+import StoreSettings from "./StoreSettings";
+import Login from "./Login";
 
-const API_URL = "https://delivery-app-backend-z9yz.onrender.com";
+function App() {
+  const [activeTab, setActiveTab] = useState("orders");
 
-function StoreSettings({ token }) {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  // null means "not logged in". Once set, this holds { token, vendor }.
+  const [session, setSession] = useState(null);
 
-  async function fetchProfile() {
-    try {
-      const response = await fetch(`${API_URL}/api/vendor/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error("Failed to load profile");
-      const data = await response.json();
-      setProfile(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  function handleLogin(token, vendor) {
+    setSession({ token, vendor });
   }
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-    setSuccess(false);
-
-    const form = e.target;
-    const payload = {
-      cuisine: form.cuisine.value,
-      cover_image_url: form.cover_image_url.value,
-      delivery_time_estimate: form.delivery_time_estimate.value,
-      delivery_fee: parseFloat(form.delivery_fee.value) || 0,
-      deal_text: form.deal_text.value || null,
-      rating: parseFloat(form.rating.value) || 0,
-    };
-
-    try {
-      const response = await fetch(`${API_URL}/api/vendor/profile`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) throw new Error("Failed to save changes");
-      const updated = await response.json();
-      setProfile(updated);
-      setSuccess(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
+  function handleLogout() {
+    setSession(null);
   }
 
-  if (loading) return <p>Loading store settings...</p>;
-  if (!profile) return <p>Could not load your profile.</p>;
+  // Not logged in yet - show the login/signup screen instead of the dashboard
+  if (!session) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
-    <div>
-      <h1>Store Settings</h1>
-      <p className="settings-hint">
-        This information appears on your storefront in the Customer App.
-      </p>
-
-      <form onSubmit={handleSubmit} className="settings-form">
-        <label>
-          Cuisine / tags
-          <input
-            name="cuisine"
-            placeholder="e.g. American · Burgers"
-            defaultValue={profile.cuisine || ""}
-          />
-        </label>
-
-        <label>
-          Cover photo URL
-          <input
-            name="cover_image_url"
-            placeholder="https://..."
-            defaultValue={profile.cover_image_url || ""}
-          />
-        </label>
-
-        <div className="settings-row">
-          <label>
-            Delivery time estimate
-            <input
-              name="delivery_time_estimate"
-              placeholder="e.g. 20-30 min"
-              defaultValue={profile.delivery_time_estimate || ""}
-            />
-          </label>
-          <label>
-            Delivery fee (₦)
-            <input
-              name="delivery_fee"
-              type="number"
-              step="0.01"
-              defaultValue={profile.delivery_fee || 0}
-            />
-          </label>
-        </div>
-
-        <label>
-          Deal / promo text (optional)
-          <input
-            name="deal_text"
-            placeholder="e.g. 20% off first order"
-            defaultValue={profile.deal_text || ""}
-          />
-        </label>
-
-        <label>
-          Rating (temporary - not yet based on real reviews)
-          <input
-            name="rating"
-            type="number"
-            step="0.1"
-            min="0"
-            max="5"
-            defaultValue={profile.rating || 0}
-          />
-        </label>
-
-        {error && <p className="error-text">{error}</p>}
-        {success && <p className="success-text">Saved successfully.</p>}
-
-        <button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save Changes"}
+    <div className="container">
+      <div className="app-topbar">
+        <span>{session.vendor.name}</span>
+        <button className="logout-btn" onClick={handleLogout}>
+          Log out
         </button>
-      </form>
+      </div>
+
+      <div className="tabs">
+        <button
+          className={activeTab === "orders" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("orders")}
+        >
+          Order Inbox
+        </button>
+        <button
+          className={activeTab === "menu" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("menu")}
+        >
+          Menu Management
+        </button>
+        <button
+          className={activeTab === "settings" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("settings")}
+        >
+          Store Settings
+        </button>
+      </div>
+
+      {activeTab === "orders" && <OrderInbox token={session.token} />}
+      {activeTab === "menu" && <MenuManagement token={session.token} />}
+      {activeTab === "settings" && <StoreSettings token={session.token} />}
     </div>
   );
 }
 
-export default StoreSettings;
+export default App;
