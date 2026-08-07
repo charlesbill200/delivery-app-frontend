@@ -9,6 +9,8 @@ function MenuManagement({ token }) {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [formItem, setFormItem] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const authHeaders = {
     "Content-Type": "application/json",
@@ -79,6 +81,26 @@ function MenuManagement({ token }) {
     }
   }
 
+  // Uploads the currently-selected file to a menu item that already exists
+  // (an item must be created first, since the photo route needs a real id
+  // to attach the URL to).
+  async function uploadPhoto(itemId, file) {
+    const photoFormData = new FormData();
+    photoFormData.append("photo", file);
+
+    const response = await fetch(`${API_URL}/api/menu-items/${itemId}/photo`, {
+      method: "POST",
+      // NOTE: no Content-Type header here on purpose - the browser sets the
+      // correct multipart boundary automatically for FormData. Setting it
+      // manually breaks the upload.
+      headers: { Authorization: `Bearer ${token}` },
+      body: photoFormData,
+    });
+
+    if (!response.ok) throw new Error("Failed to upload photo");
+    return response.json();
+  }
+
   async function handleFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
@@ -105,10 +127,21 @@ function MenuManagement({ token }) {
         ),
       });
       if (!response.ok) throw new Error("Failed to save item");
+      const savedItem = await response.json();
+
+      // If the vendor picked a photo, upload it now that we have a real item id.
+      if (selectedFile) {
+        setUploading(true);
+        await uploadPhoto(savedItem.id, selectedFile);
+        setUploading(false);
+      }
+
       setFormItem(null);
+      setSelectedFile(null);
       fetchItems();
     } catch (err) {
       setError(err.message);
+      setUploading(false);
     }
   }
 
@@ -172,7 +205,18 @@ function MenuManagement({ token }) {
 
           {itemsInSelectedCategory.map((item) => (
             <div key={item.id} className="menu-row">
-              <div className="menu-row-thumb" />
+              <div
+                className="menu-row-thumb"
+                style={
+                  item.photo_url
+                    ? {
+                        backgroundImage: `url(${item.photo_url})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : undefined
+                }
+              />
               <div className="menu-row-info">
                 <div className="menu-row-title">
                   <strong>{item.name}</strong>
@@ -205,7 +249,13 @@ function MenuManagement({ token }) {
       </div>
 
       {formItem && (
-        <div className="modal-backdrop" onClick={() => setFormItem(null)}>
+        <div
+          className="modal-backdrop"
+          onClick={() => {
+            setFormItem(null);
+            setSelectedFile(null);
+          }}
+        >
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{formItem.id ? "Edit item" : "Add item"}</h2>
             <form onSubmit={handleFormSubmit} className="menu-form">
@@ -239,11 +289,42 @@ function MenuManagement({ token }) {
                 placeholder="Tag (optional, e.g. VEGETARIAN)"
                 defaultValue={formItem.tag || ""}
               />
+
+              {formItem.photo_url && !selectedFile && (
+                <img
+                  src={formItem.photo_url}
+                  alt=""
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 8,
+                    objectFit: "cover",
+                  }}
+                />
+              )}
+
+              <label>
+                Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSelectedFile(e.target.files[0] || null)}
+                />
+              </label>
+
               <div className="modal-actions">
-                <button type="button" onClick={() => setFormItem(null)}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormItem(null);
+                    setSelectedFile(null);
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit">Save</button>
+                <button type="submit" disabled={uploading}>
+                  {uploading ? "Uploading photo..." : "Save"}
+                </button>
               </div>
             </form>
           </div>
