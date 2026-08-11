@@ -9,6 +9,18 @@ function StoreSettings({ token }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
+  // --- Delivery fees by zone ---
+  const [zoneFees, setZoneFees] = useState([]); // [{ zone_id, zone_name, delivery_fee }]
+  const [zoneFeesLoading, setZoneFeesLoading] = useState(true);
+  const [zoneFeeInputs, setZoneFeeInputs] = useState({}); // { [zone_id]: "typed value" }
+  const [savingZoneId, setSavingZoneId] = useState(null); // which row's save button is spinning
+  const [savedZoneId, setSavedZoneId] = useState(null); // brief "Saved" confirmation per row
+
+  const authHeaders = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
   async function fetchProfile() {
     try {
       const response = await fetch(`${API_URL}/api/vendor/profile`, {
@@ -24,8 +36,25 @@ function StoreSettings({ token }) {
     }
   }
 
+  async function fetchZoneFees() {
+    try {
+      const response = await fetch(`${API_URL}/api/vendor/zone-fees`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Failed to load zone fees");
+      setZoneFees(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setZoneFeesLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchProfile();
+    fetchZoneFees();
   }, []);
 
   async function handleSubmit(e) {
@@ -61,6 +90,33 @@ function StoreSettings({ token }) {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  // Saves ONE zone's fee - each row has its own Save button so a vendor
+  // can update one area without having to touch every other field.
+  async function saveZoneFee(zoneId) {
+    const typedValue = zoneFeeInputs[zoneId];
+    if (typedValue === undefined || typedValue === "") return;
+
+    setSavingZoneId(zoneId);
+    try {
+      const response = await fetch(
+        `${API_URL}/api/vendor/zone-fees/${zoneId}`,
+        {
+          method: "PATCH",
+          headers: authHeaders,
+          body: JSON.stringify({ delivery_fee: parseFloat(typedValue) }),
+        },
+      );
+      if (!response.ok) throw new Error("Failed to save delivery fee");
+      await fetchZoneFees();
+      setSavedZoneId(zoneId);
+      setTimeout(() => setSavedZoneId(null), 1500);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingZoneId(null);
     }
   }
 
@@ -105,7 +161,7 @@ function StoreSettings({ token }) {
             />
           </label>
           <label>
-            Delivery fee (₦)
+            Default delivery fee (₦)
             <input
               name="delivery_fee"
               type="number"
@@ -114,6 +170,9 @@ function StoreSettings({ token }) {
             />
           </label>
         </div>
+        <p className="settings-hint" style={{ marginTop: -10 }}>
+          Used for any area you haven't set a specific fee for below.
+        </p>
 
         <label>
           Deal / promo text (optional)
@@ -143,6 +202,59 @@ function StoreSettings({ token }) {
           {saving ? "Saving..." : "Save Changes"}
         </button>
       </form>
+
+      <h2 style={{ marginTop: 32 }}>Delivery fees by area</h2>
+      <p className="settings-hint">
+        Set a different delivery fee for each area you deliver to. Leave an area
+        blank to use your default delivery fee above.
+      </p>
+
+      {zoneFeesLoading ? (
+        <p>Loading areas...</p>
+      ) : (
+        <div className="menu-form" style={{ maxWidth: 480 }}>
+          {zoneFees.map((zone) => (
+            <div
+              key={zone.zone_id}
+              className="settings-row"
+              style={{ alignItems: "center" }}
+            >
+              <span style={{ flex: 1 }}>{zone.zone_name}</span>
+              <input
+                type="number"
+                step="0.01"
+                placeholder={
+                  zone.delivery_fee !== null
+                    ? String(zone.delivery_fee)
+                    : "Using default"
+                }
+                value={
+                  zoneFeeInputs[zone.zone_id] ??
+                  (zone.delivery_fee !== null ? zone.delivery_fee : "")
+                }
+                onChange={(e) =>
+                  setZoneFeeInputs({
+                    ...zoneFeeInputs,
+                    [zone.zone_id]: e.target.value,
+                  })
+                }
+                style={{ maxWidth: 110 }}
+              />
+              <button
+                type="button"
+                onClick={() => saveZoneFee(zone.zone_id)}
+                disabled={savingZoneId === zone.zone_id}
+              >
+                {savingZoneId === zone.zone_id
+                  ? "..."
+                  : savedZoneId === zone.zone_id
+                    ? "✓ Saved"
+                    : "Save"}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
