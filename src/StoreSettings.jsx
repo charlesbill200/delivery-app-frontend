@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-
-const API_URL = "https://delivery-app-backend-z9yz.onrender.com";
+import { API_URL } from "./config";
 
 function StoreSettings({ token }) {
   const [profile, setProfile] = useState(null);
@@ -70,7 +69,9 @@ function StoreSettings({ token }) {
       delivery_time_estimate: form.delivery_time_estimate.value,
       delivery_fee: parseFloat(form.delivery_fee.value) || 0,
       deal_text: form.deal_text.value || null,
-      rating: parseFloat(form.rating.value) || 0,
+      // rating intentionally omitted - the backend no longer accepts it
+      // here. Rating is computed from real customer reviews, not
+      // vendor-editable. See the read-only display further down.
     };
 
     try {
@@ -183,17 +184,23 @@ function StoreSettings({ token }) {
           />
         </label>
 
-        <label>
-          Rating (temporary - not yet based on real reviews)
-          <input
-            name="rating"
-            type="number"
-            step="0.1"
-            min="0"
-            max="5"
-            defaultValue={profile.rating || 0}
-          />
-        </label>
+        <div>
+          <span
+            style={{
+              display: "block",
+              marginBottom: 7,
+              color: "#4d576b",
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            Rating
+          </span>
+          <p className="settings-hint" style={{ margin: 0 }}>
+            {profile.rating ? `★ ${profile.rating}` : "No reviews yet"} —
+            calculated from customer reviews, not editable here.
+          </p>
+        </div>
 
         {error && <p className="error-text">{error}</p>}
         {success && <p className="success-text">Saved successfully.</p>}

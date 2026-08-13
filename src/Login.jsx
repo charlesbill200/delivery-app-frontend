@@ -1,6 +1,5 @@
 import { useState } from "react";
-
-const API_URL = "https://delivery-app-backend-z9yz.onrender.com";
+import { API_URL } from "./config";
 
 // "onLogin" is a function passed down from App.jsx - calling it is how
 // this component hands the token back up to the rest of the app.

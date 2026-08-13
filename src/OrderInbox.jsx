@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-
-const API_URL = "https://delivery-app-backend-z9yz.onrender.com";
+import { API_URL } from "./config";
 
 const COLUMNS = [
   { key: "new", label: "New", statuses: ["placed", "accepted"] },
@@ -31,10 +30,27 @@ function timeAgo(dateString) {
 
 // "token" now comes in as a prop from App.jsx instead of a hardcoded vendor ID.
 // Every fetch sends it in the Authorization header so the backend knows who's asking.
+function isToday(dateString) {
+  const d = new Date(dateString);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
+
 function OrderInbox({ token }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // loadError: couldn't fetch orders at all - blocks the whole view, since
+  // there's nothing to show. actionError: a single status update failed -
+  // shown as a dismissible banner ABOVE the board, which stays visible with
+  // whatever data it already has. These used to be the same piece of state,
+  // which meant one failed "Accept" click would blank the entire kanban
+  // board until the next 15s poll happened to succeed.
+  const [loadError, setLoadError] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   async function fetchOrders() {
     try {
@@ -44,9 +60,9 @@ function OrderInbox({ token }) {
       if (!response.ok) throw new Error("Failed to fetch orders");
       const data = await response.json();
       setOrders(data);
-      setError(null);
+      setLoadError(null);
     } catch (err) {
-      setError(err.message);
+      setLoadError(err.message);
     } finally {
       setLoading(false);
     }
@@ -59,6 +75,7 @@ function OrderInbox({ token }) {
   }, []);
 
   async function advanceStatus(orderId, nextStatus) {
+    setActionError(null);
     try {
       const response = await fetch(`${API_URL}/api/orders/${orderId}/status`, {
         method: "PATCH",
@@ -68,20 +85,27 @@ function OrderInbox({ token }) {
         },
         body: JSON.stringify({ status: nextStatus }),
       });
-      if (!response.ok) throw new Error("Failed to update order");
+      const data = await response.json();
+      if (!response.ok) {
+        // The backend's status state machine returns a specific message
+        // (e.g. "Cannot move an order from 'placed' to 'delivered'") -
+        // surface that instead of a generic failure.
+        throw new Error(data.error || "Failed to update order");
+      }
       fetchOrders();
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message);
     }
   }
 
   if (loading) return <p>Loading orders...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loadError) return <p className="error-text">Error: {loadError}</p>;
 
   const newCount = orders.filter((o) =>
     COLUMNS[0].statuses.includes(o.status),
   ).length;
   const preparingCount = orders.filter((o) => o.status === "preparing").length;
+  const todayCount = orders.filter((o) => isToday(o.created_at)).length;
 
   return (
     <div>
@@ -92,9 +116,30 @@ function OrderInbox({ token }) {
         <div className="inbox-stats">
           <span className="stat stat-new">{newCount} new</span>
           <span className="stat">{preparingCount} preparing</span>
-          <span className="stat">{orders.length} total today</span>
+          <span className="stat">{todayCount} total today</span>
         </div>
       </div>
+
+      {actionError && (
+        <p className="error-text" style={{ marginBottom: 16 }}>
+          {actionError}{" "}
+          <button
+            type="button"
+            onClick={() => setActionError(null)}
+            style={{
+              marginLeft: 8,
+              border: "none",
+              background: "none",
+              color: "inherit",
+              textDecoration: "underline",
+              cursor: "pointer",
+              padding: 0,
+            }}
+          >
+            Dismiss
+          </button>
+        </p>
+      )}
 
       <div className="kanban-board">
         {COLUMNS.map((column) => {

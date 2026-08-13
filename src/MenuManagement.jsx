@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-
-const API_URL = "https://delivery-app-backend-z9yz.onrender.com";
+import { API_URL } from "./config";
 
 // "token" comes in as a prop now instead of a hardcoded vendor ID.
 function MenuManagement({ token }) {

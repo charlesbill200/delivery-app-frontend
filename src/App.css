@@ -138,6 +138,11 @@ button {
   color: #fff;
 }
 
+.sidebar-link:disabled:hover {
+  background: transparent;
+  color: #c4ccdb;
+}
+
 .sidebar-link.active {
   color: var(--orange);
   background: rgba(255, 100, 31, 0.13);
