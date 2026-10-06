@@ -4,19 +4,22 @@ import { API_URL } from "./config";
 const COLUMNS = [
   { key: "new", label: "New", statuses: ["placed", "accepted"] },
   { key: "preparing", label: "Preparing", statuses: ["preparing"] },
-  { key: "ready", label: "Ready", statuses: ["ready"] },
   {
-    key: "completed",
-    label: "Completed",
-    statuses: ["picked_up", "delivered"],
+    key: "ready",
+    label: "Ready / On the way",
+    statuses: ["ready", "picked_up"],
   },
+  { key: "completed", label: "Completed", statuses: ["delivered"] },
 ];
 
+// What the button on each card does. The server only allows these steps
+// in this order: ready -> picked_up -> delivered.
 const ACTION = {
   placed: { label: "Accept", next: "accepted" },
   accepted: { label: "Start Preparing", next: "preparing" },
   preparing: { label: "Mark ready", next: "ready" },
-  ready: { label: "Complete", next: "delivered" },
+  ready: { label: "Out for delivery", next: "picked_up" },
+  picked_up: { label: "Mark delivered", next: "delivered" },
 };
 
 function timeAgo(dateString) {
@@ -172,7 +175,11 @@ function OrderInbox({ token }) {
                     </div>
 
                     <div className="kanban-card-tags">
-                      <span className="tag tag-delivery">DELIVERY</span>
+                      <span className="tag tag-delivery">
+                        {order.status === "picked_up"
+                          ? "ON THE WAY"
+                          : "DELIVERY"}
+                      </span>
                       <span className="customer-name">
                         {order.customer_name}
                       </span>
