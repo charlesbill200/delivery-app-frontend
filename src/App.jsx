@@ -173,7 +173,13 @@ function App() {
         </div>
 
         <div className="dashboard-content">
-          {activeTab === "orders" && <OrderInbox token={session.token} />}
+          {activeTab === "orders" && (
+            <OrderInbox
+              token={session.token}
+              vendorName={session.vendor.name}
+              onSessionExpired={handleLogout}
+            />
+          )}
           {activeTab === "menu" && <MenuManagement token={session.token} />}
           {activeTab === "settings" && <StoreSettings token={session.token} />}
         </div>
