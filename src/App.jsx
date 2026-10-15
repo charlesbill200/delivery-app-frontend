@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 import OrderInbox from "./OrderInbox";
+import OrderHistory from "./OrderHistory";
 import MenuManagement from "./MenuManagement";
 import StoreSettings from "./StoreSettings";
 import Login from "./Login";
@@ -38,6 +39,7 @@ function getInitials(name) {
 
 function App() {
   const [activeTab, setActiveTab] = useState("orders");
+  const [ordersView, setOrdersView] = useState("inbox"); // "inbox" or "history"
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // null means "not logged in". Once set, this holds { token, vendor }.
@@ -67,6 +69,7 @@ function App() {
 
   function handleLogout() {
     setSession(null);
+    setOrdersView("inbox");
   }
 
   // Not logged in yet - show the login/signup screen instead of the dashboard
@@ -111,6 +114,7 @@ function App() {
             }
             onClick={() => {
               setActiveTab(item.key);
+              if (item.key === "orders") setOrdersView("inbox");
               setMobileNavOpen(false);
             }}
           >
@@ -173,11 +177,20 @@ function App() {
         </div>
 
         <div className="dashboard-content">
-          {activeTab === "orders" && (
+          {activeTab === "orders" && ordersView === "inbox" && (
             <OrderInbox
               token={session.token}
               vendorName={session.vendor.name}
               onSessionExpired={handleLogout}
+              onOpenHistory={() => setOrdersView("history")}
+            />
+          )}
+          {activeTab === "orders" && ordersView === "history" && (
+            <OrderHistory
+              token={session.token}
+              vendorName={session.vendor.name}
+              onSessionExpired={handleLogout}
+              onBack={() => setOrdersView("inbox")}
             />
           )}
           {activeTab === "menu" && <MenuManagement token={session.token} />}
