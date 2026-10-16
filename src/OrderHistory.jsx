@@ -44,18 +44,44 @@ function itemSummary(order) {
   return `${count} ${count === 1 ? "item" : "items"} · ${shown}${more}`;
 }
 
-// Makes a value safe to put in a CSV cell (and blocks spreadsheet formulas).
-function csvCell(value) {
-  let text = String(value ?? "");
-  const looksLikeNumber = /^[+\-]?[\d\s().-]+$/.test(text);
-  if (/^[=@\t\r]/.test(text) || (/^[+-]/.test(text) && !looksLikeNumber)) {
-    text = "'" + text;
-  }
-  return `"${text.replace(/"/g, '""')}"`;
+// The PDF's built-in font only supports plain English letters, so this
+// removes accents and replaces anything it can't draw with a "?".
+function pdfText(value) {
+  return String(value ?? "")
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/[\u00A0\u2000-\u200B\u202F\u205F]/g, " ")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, "-")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "?");
+}
+
+// The PDF font can't draw the naira sign, so amounts are written as "NGN".
+function pdfMoney(value) {
+  return pdfText(
+    "NGN " +
+      (Number(value) || 0).toLocaleString("en-NG", {
+        maximumFractionDigits: 2,
+      }),
+  );
+}
+
+function pdfStamp(value) {
+  return pdfText(
+    new Date(value).toLocaleString([], {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }),
+  );
 }
 
 // token: the vendor's login token.
-// vendorName: shown in "Handoff manually confirmed by ...".
+// vendorName: shown in "Handoff manually confirmed by ..." and in the PDF.
 // onSessionExpired: called when the server says the login is no longer valid.
 // onBack: returns to the Order Inbox.
 function OrderHistory({ token, vendorName, onSessionExpired, onBack }) {
@@ -171,11 +197,14 @@ function OrderHistory({ token, vendorName, onSessionExpired, onBack }) {
     setPage(1);
   }
 
-  async function exportCsv() {
+  async function exportPdf() {
     setExporting(true);
     setError(null);
     try {
+      // Fetch every page of orders that match the current filters
+      // (up to 50 pages, which is 1,000 orders).
       const rows = [];
+      let matching = 0;
       let pageNum = 1;
       let totalPages = 1;
       while (pageNum <= totalPages && pageNum <= 50) {
@@ -185,55 +214,134 @@ function OrderHistory({ token, vendorName, onSessionExpired, onBack }) {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Export failed");
         rows.push(...data.orders);
+        matching = data.total;
         totalPages = Math.ceil(data.total / data.page_size);
         pageNum += 1;
       }
 
-      const header = [
-        "Order",
-        "Customer",
-        "Phone",
-        "Address",
-        "Items",
-        "Total (NGN)",
-        "Payment",
-        "Status",
-        "Handed off",
-        "Notes",
-      ];
-      const lines = [header.map(csvCell).join(",")];
-      rows.forEach((o) => {
-        lines.push(
+      // The PDF tools are loaded only now, so the rest of the dashboard
+      // stays fast to open.
+      const [{ jsPDF }, tableModule] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+      const autoTable = tableModule.autoTable || tableModule.default;
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "pt",
+        format: "a4",
+      });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 40;
+
+      const orderValue = rows.reduce(
+        (sum, o) => sum + Number(o.total_amount || 0),
+        0,
+      );
+      const paidValue = rows
+        .filter((o) => o.payment_status === "success")
+        .reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+      const filters = [
+        `Status: ${statusLabel(status)}`,
+        `Date: ${date ? formatDay(date) : "All dates"}`,
+        search ? `Search: ${pdfText(search)}` : null,
+      ]
+        .filter(Boolean)
+        .join("   |   ");
+      const countNote =
+        rows.length < matching
+          ? ` (first ${rows.length} of ${matching} orders)`
+          : "";
+
+      doc.setTextColor(31, 41, 51);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text("Order History", margin, 44);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(90);
+      doc.text(
+        `${pdfText(vendorName || "")}   |   Created ${pdfStamp(new Date())}`,
+        margin,
+        62,
+      );
+      doc.text(pdfText(filters), margin, 78);
+      doc.text(
+        `Orders: ${rows.length}${countNote}   |   Order value: ${pdfMoney(orderValue)}   |   Of which paid: ${pdfMoney(paidValue)}`,
+        margin,
+        94,
+      );
+
+      const body = rows.map((o) => [
+        `#${o.id}`,
+        pdfText(o.customer_name),
+        pdfText(o.customer_phone),
+        pdfText(o.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")),
+        pdfText(o.delivery_address),
+        pdfMoney(o.total_amount),
+        o.payment_status === "success" ? "Paid" : "Unpaid",
+        o.handed_off_at ? pdfStamp(o.handed_off_at) : "-",
+      ]);
+
+      autoTable(doc, {
+        startY: 108,
+        head: [
           [
-            o.id,
-            o.customer_name,
-            o.customer_phone,
-            o.delivery_address,
-            o.items.map((i) => `${i.quantity}x ${i.name}`).join("; "),
-            o.total_amount,
-            o.payment_status === "success" ? "Paid" : "Unpaid",
-            statusLabel(o.status),
-            o.handed_off_at ? formatDateTime(o.handed_off_at) : "",
-            o.notes || "",
-          ]
-            .map(csvCell)
-            .join(","),
-        );
+            "Order",
+            "Customer",
+            "Phone",
+            "Items",
+            "Address",
+            "Total",
+            "Payment",
+            "Handed off",
+          ],
+        ],
+        body,
+        margin: { left: margin, right: margin, bottom: 40 },
+        styles: {
+          font: "helvetica",
+          fontSize: 8,
+          cellPadding: 4,
+          overflow: "linebreak",
+          valign: "top",
+        },
+        headStyles: { fillColor: [35, 74, 66], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 247, 246] },
+        columnStyles: {
+          0: { cellWidth: 40 },
+          1: { cellWidth: 90 },
+          2: { cellWidth: 75 },
+          3: { cellWidth: 170 },
+          4: { cellWidth: 170 },
+          5: { cellWidth: 70, halign: "right" },
+          6: { cellWidth: 50 },
+          7: { cellWidth: 95 },
+        },
       });
 
-      const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `order-history-${lagosDate()}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(120);
+        doc.text(
+          `Page ${i} of ${pageCount}`,
+          pageWidth - margin,
+          pageHeight - 20,
+          {
+            align: "right",
+          },
+        );
+      }
+
+      doc.save(`order-history-${lagosDate()}.pdf`);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Export failed");
     } finally {
       setExporting(false);
     }
@@ -354,10 +462,11 @@ function OrderHistory({ token, vendorName, onSessionExpired, onBack }) {
         <button
           type="button"
           className="oh-btn-outline oh-toolbar-spacer"
-          onClick={exportCsv}
+          onClick={exportPdf}
           disabled={exporting || total === 0}
         >
-          <Icon name="download" /> {exporting ? "Exporting..." : "Export"}
+          <Icon name="download" />{" "}
+          {exporting ? "Preparing PDF..." : "Export PDF"}
         </button>
       </div>
 
