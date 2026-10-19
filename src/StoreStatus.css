@@ -32,9 +32,12 @@
   border-radius: 50%;
   background: currentColor;
 }
+.ss-label-short {
+  display: none;
+}
 .ss-menu {
   position: absolute;
-  right: 0;
+  left: 0;
   top: calc(100% + 8px);
   z-index: 60;
   width: 290px;
@@ -100,4 +103,23 @@
   margin: 6px 12px 4px;
   color: #b42318;
   font-size: 12px;
+}
+
+/* On phones the menu spans the screen width (it is positioned against the top bar). */
+@media (max-width: 600px) {
+  .ss-root {
+    position: static;
+  }
+  .ss-menu {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+  }
+  .ss-label-long {
+    display: none;
+  }
+  .ss-label-short {
+    display: inline;
+  }
 }

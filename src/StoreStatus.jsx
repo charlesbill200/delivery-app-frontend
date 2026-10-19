@@ -105,8 +105,9 @@ function StoreStatus({ token, onSessionExpired }) {
     }
   }
 
-  const label =
+  const longLabel =
     isOpen === null ? "Checking..." : isOpen ? "Open for orders" : "Closed";
+  const shortLabel = isOpen === null ? "..." : isOpen ? "Open" : "Closed";
   const pillClass =
     isOpen === null
       ? "ss-pill ss-pill-loading"
@@ -124,7 +125,9 @@ function StoreStatus({ token, onSessionExpired }) {
         aria-expanded={menuOpen}
         title="Choose whether customers can order from you"
       >
-        <span className="ss-dot" /> {label}
+        <span className="ss-dot" />
+        <span className="ss-label-long">{longLabel}</span>
+        <span className="ss-label-short">{shortLabel}</span>
       </button>
 
       {menuOpen && (
