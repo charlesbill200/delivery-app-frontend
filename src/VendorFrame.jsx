@@ -13,9 +13,6 @@ const NAV_ITEMS = [
   { key: "settings", label: "Settings", icon: "sliders" },
 ];
 
-// What the bottom bar shows on a phone (only screens that exist).
-const MOBILE_TABS = ["orders", "menu", "settings"];
-
 const POLL_MS = 15000;
 
 function NavIcon({ name, size = 18 }) {
@@ -35,6 +32,18 @@ function NavIcon({ name, size = 18 }) {
       return (
         <svg {...props}>
           <path d="M20 6L9 17l-5-5" />
+        </svg>
+      );
+    case "x":
+      return (
+        <svg {...props}>
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      );
+    case "menu":
+      return (
+        <svg {...props}>
+          <path d="M3 12h18M3 6h18M3 18h18" />
         </svg>
       );
     case "home":
@@ -129,6 +138,7 @@ function VendorFrame({
 }) {
   // active = orders still being worked on; fresh = new orders not yet accepted.
   const [counts, setCounts] = useState({ active: 0, fresh: 0 });
+  const [drawerOpen, setDrawerOpen] = useState(false); // phone slide-out menu
 
   useEffect(() => {
     let cancelled = false;
@@ -163,20 +173,59 @@ function VendorFrame({
     };
   }, [token]);
 
-  function confirmLogout() {
-    if (window.confirm("Log out of Vendor Hub?")) onLogout();
+  // Phone menu: lock page scrolling while it is open, close it on Escape,
+  // and close it if the window grows to desktop size.
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") setDrawerOpen(false);
+    }
+    const wide = window.matchMedia("(min-width: 901px)");
+    function onWide(e) {
+      if (e.matches) setDrawerOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    wide.addEventListener("change", onWide);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      wide.removeEventListener("change", onWide);
+    };
+  }, [drawerOpen]);
+
+  function go(tab) {
+    setDrawerOpen(false);
+    onNavigate(tab);
   }
 
   const dateText = formatToday();
 
   return (
     <div className="vh-root">
-      <aside className="vh-sidebar">
+      {drawerOpen && (
+        <div className="vh-backdrop" onClick={() => setDrawerOpen(false)} />
+      )}
+
+      <aside
+        className={drawerOpen ? "vh-sidebar vh-sidebar-open" : "vh-sidebar"}
+      >
         <div className="vh-brand">
           <span className="vh-mark">
             <NavIcon name="check" size={20} />
           </span>
           <span className="vh-brand-name">Vendor Hub</span>
+          <button
+            type="button"
+            className="vh-close"
+            aria-label="Close menu"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <NavIcon name="x" size={20} />
+          </button>
         </div>
 
         <span className="vh-section">MENU</span>
@@ -201,7 +250,7 @@ function VendorFrame({
                 className={
                   item.key === activeTab ? "vh-link vh-link-active" : "vh-link"
                 }
-                onClick={() => onNavigate(item.key)}
+                onClick={() => go(item.key)}
               >
                 <NavIcon name={item.icon} />
                 <span>{item.label}</span>
@@ -231,9 +280,15 @@ function VendorFrame({
       <div className="vh-main">
         <header className="vh-topbar">
           <div className="vh-top-left">
-            <span className="vh-mark vh-mark-mobile">
-              <NavIcon name="check" size={20} />
-            </span>
+            <button
+              type="button"
+              className="vh-menu-btn"
+              aria-label="Open menu"
+              aria-expanded={drawerOpen}
+              onClick={() => setDrawerOpen(true)}
+            >
+              <NavIcon name="menu" size={20} />
+            </button>
             <div className="vh-store">
               <span className="vh-store-name">{vendor.name}</span>
               <span className="vh-date vh-date-mobile">{dateText}</span>
@@ -256,7 +311,7 @@ function VendorFrame({
                   ? `${counts.fresh} new order${counts.fresh === 1 ? "" : "s"} waiting`
                   : "No new orders"
               }
-              onClick={() => onNavigate("orders")}
+              onClick={() => go("orders")}
             >
               <NavIcon name="bell" />
               {counts.fresh > 0 && (
@@ -268,34 +323,6 @@ function VendorFrame({
 
         <main className="vh-content">{children}</main>
       </div>
-
-      <nav className="vh-bottomnav" aria-label="Main">
-        {MOBILE_TABS.map((key) => {
-          const item = NAV_ITEMS.find((i) => i.key === key);
-          return (
-            <button
-              key={key}
-              type="button"
-              className={key === activeTab ? "vh-tab vh-tab-active" : "vh-tab"}
-              onClick={() => onNavigate(key)}
-            >
-              <span className="vh-tab-icon">
-                <NavIcon name={item.icon} size={22} />
-                {key === "orders" && counts.active > 0 && (
-                  <span className="vh-badge vh-badge-tab">{counts.active}</span>
-                )}
-              </span>
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-        <button type="button" className="vh-tab" onClick={confirmLogout}>
-          <span className="vh-tab-icon">
-            <NavIcon name="logout" size={22} />
-          </span>
-          <span>Log out</span>
-        </button>
-      </nav>
     </div>
   );
 }

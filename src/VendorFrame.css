@@ -15,6 +15,13 @@
   font-family: inherit;
 }
 
+/* Phone-only pieces are hidden on wide screens. */
+.vh-menu-btn,
+.vh-close,
+.vh-backdrop {
+  display: none;
+}
+
 /* ---- Sidebar (desktop) ---- */
 .vh-sidebar {
   position: sticky;
@@ -46,9 +53,6 @@
   border-radius: 10px;
   background: var(--vh-primary);
   color: #fff;
-}
-.vh-mark-mobile {
-  display: none;
 }
 .vh-brand-name {
   font-size: 18px;
@@ -244,51 +248,71 @@
   padding: 28px 32px 48px;
 }
 
-/* ---- Bottom bar (phones) ---- */
-.vh-bottomnav {
-  display: none;
-}
-.vh-tab {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 4px;
-  background: none;
-  border: none;
-  border-radius: 10px;
-  color: var(--vh-muted);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.vh-tab-active {
-  color: var(--vh-primary);
-}
-.vh-tab-icon {
-  position: relative;
-  display: inline-flex;
-}
-.vh-badge-tab {
-  position: absolute;
-  top: -6px;
-  right: -14px;
-  margin-left: 0;
-  min-width: 18px;
-  padding: 1px 5px;
-  font-size: 10px;
-}
-
+/* ---- Phones: the sidebar becomes a slide-out menu ---- */
 @media (max-width: 900px) {
   .vh-sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 70;
+    width: 280px;
+    max-width: 85vw;
+    height: auto;
+    overflow-y: auto;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 0.25s ease,
+      visibility 0s linear 0.25s;
+  }
+  .vh-sidebar-open {
+    transform: translateX(0);
+    visibility: visible;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+    transition:
+      transform 0.25s ease,
+      visibility 0s;
+  }
+  .vh-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 65;
+    background: rgba(31, 41, 51, 0.45);
+  }
+  .vh-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: var(--vh-primary);
+    color: #fff;
+    cursor: pointer;
+  }
+  .vh-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    width: 34px;
+    height: 34px;
+    background: none;
+    border: none;
+    border-radius: 10px;
+    color: var(--vh-muted);
+    cursor: pointer;
+  }
+  .vh-close:hover {
+    background: #f6f7f7;
   }
   .vh-topbar {
     padding: 12px 16px;
-  }
-  .vh-mark-mobile {
-    display: inline-flex;
   }
   .vh-date-desktop {
     display: none;
@@ -302,18 +326,6 @@
     max-width: 150px;
   }
   .vh-content {
-    padding: 20px 16px 96px;
-  }
-  .vh-bottomnav {
-    display: flex;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 40;
-    gap: 4px;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-    background: #fff;
-    border-top: 1px solid var(--vh-border);
+    padding: 20px 16px 32px;
   }
 }
