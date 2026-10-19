@@ -5,6 +5,7 @@ import OrderHistory from "./OrderHistory";
 import MenuManagement from "./MenuManagement";
 import StoreSettings from "./StoreSettings";
 import Login from "./Login";
+import StoreStatus from "./StoreStatus";
 
 const SESSION_KEY = "quickbite_vendor_session";
 
@@ -167,9 +168,14 @@ function App() {
           </div>
 
           <div className="topbar-actions">
-            <button className="topbar-icon-button" aria-label="Notifications">
-              🔔
-            </button>
+            <StoreStatus
+              token={session.token}
+              onSessionExpired={handleLogout}
+            />
+            <button
+              className="topbar-icon-button"
+              aria-label="Notifications"
+            ></button>
             <div className="topbar-avatar">
               {getInitials(session.vendor.name)}
             </div>

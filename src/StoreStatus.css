@@ -1,0 +1,103 @@
+.ss-root {
+  position: relative;
+  display: inline-block;
+}
+.ss-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ss-pill-open {
+  background: #e3f0ea;
+  color: #2f6f55;
+}
+.ss-pill-closed {
+  background: #fdeceb;
+  color: #b42318;
+}
+.ss-pill-loading {
+  background: #f1f3f2;
+  color: #6b7280;
+}
+.ss-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ss-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 60;
+  width: 290px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+.ss-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  text-align: left;
+  color: #1f2933;
+  cursor: pointer;
+}
+.ss-option:hover {
+  background: #f6f7f7;
+}
+.ss-option:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.ss-option-selected {
+  background: #f1f5f3;
+}
+.ss-option strong {
+  display: block;
+  font-size: 14px;
+}
+.ss-hint {
+  display: block;
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.ss-radio {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 2px solid #c4c9cf;
+  border-radius: 50%;
+}
+.ss-radio-on {
+  border-color: #234a42;
+  background: radial-gradient(#234a42 0 45%, transparent 50%);
+}
+.ss-note {
+  margin: 6px 12px 4px;
+  color: #6b7280;
+  font-size: 12px;
+}
+.ss-error {
+  margin: 6px 12px 4px;
+  color: #b42318;
+  font-size: 12px;
+}
