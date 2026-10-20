@@ -5,7 +5,7 @@ import "./VendorFrame.css";
 
 // "soon" items are shown but disabled until their screens exist.
 const NAV_ITEMS = [
-  { key: "dashboard", label: "Dashboard", icon: "home", soon: true },
+  { key: "dashboard", label: "Dashboard", icon: "home" },
   { key: "orders", label: "Orders", icon: "inbox" },
   { key: "menu", label: "Menu", icon: "list" },
   { key: "customers", label: "Customers", icon: "user", soon: true },

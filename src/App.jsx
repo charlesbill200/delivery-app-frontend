@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import Dashboard from "./Dashboard";
 import OrderInbox from "./OrderInbox";
 import OrderHistory from "./OrderHistory";
 import MenuManagement from "./MenuManagement";
@@ -10,7 +11,9 @@ import VendorFrame from "./VendorFrame";
 const SESSION_KEY = "quickbite_vendor_session";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("orders");
+  // The screen shown after login. Change "dashboard" to "orders" to open on
+  // the Order Inbox instead.
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [ordersView, setOrdersView] = useState("inbox"); // "inbox" or "history"
 
   // null means "not logged in". Once set, this holds { token, vendor }.
@@ -36,6 +39,8 @@ function App() {
 
   function handleLogin(token, vendor) {
     setSession({ token, vendor });
+    setActiveTab("dashboard");
+    setOrdersView("inbox");
   }
 
   function handleLogout() {
@@ -43,10 +48,15 @@ function App() {
     setOrdersView("inbox");
   }
 
-  // Choosing "Orders" (sidebar, bottom bar or bell) always lands on the inbox.
+  // Choosing "Orders" (sidebar, bell or a Dashboard button) lands on the inbox.
   function handleNavigate(tab) {
     setActiveTab(tab);
     if (tab === "orders") setOrdersView("inbox");
+  }
+
+  function openHistory() {
+    setActiveTab("orders");
+    setOrdersView("history");
   }
 
   // Not logged in yet - show the login/signup screen instead of the dashboard
@@ -63,6 +73,14 @@ function App() {
       onLogout={handleLogout}
       onSessionExpired={handleLogout}
     >
+      {activeTab === "dashboard" && (
+        <Dashboard
+          token={session.token}
+          onSessionExpired={handleLogout}
+          onOpenInbox={() => handleNavigate("orders")}
+          onOpenHistory={openHistory}
+        />
+      )}
       {activeTab === "orders" && ordersView === "inbox" && (
         <OrderInbox
           token={session.token}
