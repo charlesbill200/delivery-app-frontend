@@ -97,7 +97,12 @@ function App() {
           onBack={() => setOrdersView("inbox")}
         />
       )}
-      {activeTab === "menu" && <MenuManagement token={session.token} />}
+            {activeTab === "menu" && (
+        <MenuManagement
+          token={session.token}
+          onSessionExpired={handleLogout}
+        />
+      )}
       {activeTab === "settings" && <StoreSettings token={session.token} />}
     </VendorFrame>
   );
