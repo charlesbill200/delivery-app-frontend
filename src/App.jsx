@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 import Dashboard from "./Dashboard";
+import Analytics from "./Analytics";
 import OrderInbox from "./OrderInbox";
 import OrderHistory from "./OrderHistory";
 import MenuManagement from "./MenuManagement";
@@ -100,6 +101,13 @@ function App() {
             {activeTab === "menu" && (
         <MenuManagement
           token={session.token}
+          onSessionExpired={handleLogout}
+        />
+      )}
+            {activeTab === "analytics" && (
+        <Analytics
+          token={session.token}
+          vendorName={session.vendor.name}
           onSessionExpired={handleLogout}
         />
       )}
