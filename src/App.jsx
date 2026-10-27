@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import Dashboard from "./Dashboard";
 import Analytics from "./Analytics";
+import Customers from "./Customers";
 import OrderInbox from "./OrderInbox";
 import OrderHistory from "./OrderHistory";
 import MenuManagement from "./MenuManagement";
@@ -110,6 +111,9 @@ function App() {
           vendorName={session.vendor.name}
           onSessionExpired={handleLogout}
         />
+      )}
+      {activeTab === "customers" && (
+        <Customers token={session.token} onSessionExpired={handleLogout} />
       )}
       {activeTab === "settings" && <StoreSettings token={session.token} />}
     </VendorFrame>

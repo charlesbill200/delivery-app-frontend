@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: "home" },
   { key: "orders", label: "Orders", icon: "inbox" },
   { key: "menu", label: "Menu", icon: "list" },
-  { key: "customers", label: "Customers", icon: "user", soon: true },
+  { key: "customers", label: "Customers", icon: "user" },
   { key: "analytics", label: "Analytics", icon: "chart" },
   { key: "settings", label: "Settings", icon: "sliders" },
 ];
