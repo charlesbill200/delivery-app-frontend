@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { API_URL } from "./config";
 import StoreStatus from "./StoreStatus";
+import { useOrderAlerts } from "./orderAlerts";
 import "./VendorFrame.css";
 
 // "soon" items are shown but disabled until their screens exist.
@@ -138,6 +139,10 @@ function VendorFrame({
 }) {
   // active = orders still being worked on; fresh = new orders not yet accepted.
   const [counts, setCounts] = useState({ active: 0, fresh: 0 });
+  // Orders waiting to be accepted (null until the first check). Drives the
+  // sound alerts, which work on every screen.
+  const [placedOrders, setPlacedOrders] = useState(null);
+  useOrderAlerts(placedOrders, token);
   const [drawerOpen, setDrawerOpen] = useState(false); // phone slide-out menu
 
   useEffect(() => {
@@ -159,6 +164,11 @@ function VendorFrame({
             active: data.length,
             fresh: data.filter((o) => o.status === "placed").length,
           });
+          setPlacedOrders(
+            data
+              .filter((o) => o.status === "placed")
+              .map((o) => ({ id: o.id, created_at: o.created_at })),
+          );
         }
       } catch {
         // Keep the last numbers; the next check tries again.

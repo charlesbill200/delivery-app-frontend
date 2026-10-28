@@ -6,7 +6,7 @@ import Customers from "./Customers";
 import OrderInbox from "./OrderInbox";
 import OrderHistory from "./OrderHistory";
 import MenuManagement from "./MenuManagement";
-import StoreSettings from "./StoreSettings";
+import Settings from "./Settings";
 import Login from "./Login";
 import VendorFrame from "./VendorFrame";
 
@@ -115,7 +115,9 @@ function App() {
       {activeTab === "customers" && (
         <Customers token={session.token} onSessionExpired={handleLogout} />
       )}
-      {activeTab === "settings" && <StoreSettings token={session.token} />}
+      {activeTab === "settings" && (
+        <Settings token={session.token} onSessionExpired={handleLogout} />
+      )}
     </VendorFrame>
   );
 }

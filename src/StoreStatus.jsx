@@ -51,6 +51,17 @@ function StoreStatus({ token, onSessionExpired }) {
     loadStatus();
   }, []);
 
+  // Settings tells us when the store was opened or closed from there.
+  useEffect(() => {
+    function onChanged(e) {
+      if (e.detail && typeof e.detail.is_open === "boolean") {
+        setIsOpen(e.detail.is_open);
+      }
+    }
+    window.addEventListener("store-status-changed", onChanged);
+    return () => window.removeEventListener("store-status-changed", onChanged);
+  }, []);
+
   // Close the menu when clicking elsewhere or pressing Escape.
   useEffect(() => {
     if (!menuOpen) return;
@@ -98,6 +109,11 @@ function StoreStatus({ token, onSessionExpired }) {
       }
       setIsOpen(data.is_open);
       setMenuOpen(false);
+      window.dispatchEvent(
+        new CustomEvent("store-status-changed", {
+          detail: { is_open: data.is_open },
+        }),
+      );
     } catch (err) {
       setError(err.message);
     } finally {
